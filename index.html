@@ -1,27 +1,273 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  
 
-<iframe scrolling="yes" id="zvxcvxcv" sandbox="allow-scripts"
-src="https://fjkmjkyhtd.blogspot.com/p/home.html"  frameborder="0" allow="autoplay; encrypted-media">
-</iframe>
 
+<div class="imgfomdo">
+    <h1>Tu Página de Peticiones de Contenido</h1>
+    <h2>Dinos qué quieres ver y nosotros lo traemos para ti. Solicita tus películas, series, animes y doramas favoritos y disfruta del mejor entretenimiento a tu alcance.</h2>
+</div>
+      
+      
+    <form id="telegramForm">
+        <label for="message">Mensaje:</label><br>
+        <textarea id="message" name="message" rows="4" cols="50" required></textarea><br><br>
+        <label for="image">Seleccionar Imagen:</label><br>
+        <input type="file" id="image" name="image" accept="image/*"><br><br>
+        <div class="btnenviar"><button type="submit">Enviar</button></div>
+    </form>
+    <div id="messageCounter"></div>
+
+    <script>
+        // Función para establecer una cookie con atributos para persistencia
+        function setCookie(name, value, days) {
+            const date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            const expires = "expires=" + date.toUTCString();
+            document.cookie = name + "=" + value + ";" + expires + ";path=/;SameSite=None;Secure";
+        }
+
+        // Función para obtener el valor de una cookie
+        function getCookie(name) {
+            const cookieName = name + "=";
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                let cookie = cookies[i].trim();
+                if (cookie.indexOf(cookieName) === 0) {
+                    return cookie.substring(cookieName.length, cookie.length);
+                }
+            }
+            return "";
+        }
+
+        // Función para actualizar el contador de mensajes y mostrarlo
+        function updateMessageCounter() {
+            const messageCount = parseInt(getCookie('messageCount')) || 0;
+            const lastSent = parseInt(getCookie('lastSent')) || 0;
+            const currentTime = new Date().getTime();
+            const timeDifference = currentTime - lastSent;
+            let messageCounterText = "";
+
+            if (messageCount >= 2 && timeDifference < 24 * 60 * 60 * 1000) {
+                messageCounterText = `Límite de 2 mensajes alcanzado en 24 horas`;
+            } else {
+                const messagesLeft = 2 - messageCount;
+                if (messagesLeft > 0) {
+                    messageCounterText = `Puedes enviar ${messagesLeft} mensaje(s) más en las próximas 24 horas`;
+                } else {
+                    messageCounterText = `No puedes enviar más mensajes por hoy`;
+                }
+            }
+
+            document.getElementById('messageCounter').innerText = messageCounterText;
+        }
+
+        // Actualizar el contador al cargar la página
+        updateMessageCounter();
+
+        document.getElementById('telegramForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            // Limitar a 2 mensajes por 24 horas usando cookies
+            const messageCount = parseInt(getCookie('messageCount')) || 0;
+            const lastSent = parseInt(getCookie('lastSent')) || 0;
+            const currentTime = new Date().getTime();
+            const timeDifference = currentTime - lastSent;
+
+            if (messageCount >= 2 && timeDifference < 24 * 60 * 60 * 1000) {
+                alert('Has alcanzado el límite de 2 mensajes en 24 horas.');
+                return;
+            }
+
+            // Datos del bot y chat
+            const token = '7187569955:AAGBF_ldPbIEcfRBmnW3QE5TYAU0TlCissA';  // Tu token de acceso del bot
+            const chat_id = '6112463359';  // Tu chat_id obtenido
+
+            // Mensaje del formulario
+            const message = document.getElementById('message').value;
+            const imageInput = document.getElementById('image');
+            const image = imageInput.files[0];
+
+            // Función para manejar la respuesta
+            const handleResponse = (data) => {
+                if (data.ok) {
+                    alert('Mensaje enviado con éxito');
+                    document.getElementById('telegramForm').reset();
+                    // Actualizar contador de mensajes y hora del último envío
+                    setCookie('messageCount', messageCount + 1, 1); // Caducidad en 1 día
+                    setCookie('lastSent', currentTime, 1); // Caducidad en 1 día
+                    updateMessageCounter(); // Actualizar el contador visible
+                } else {
+                    alert('Error al enviar el mensaje: ' + data.description);
+                }
+            };
+
+            // Enviar el mensaje con la imagen si se seleccionó una
+            if (image) {
+                const url = `https://api.telegram.org/bot${token}/sendPhoto`;
+                const formData = new FormData();
+                formData.append('chat_id', chat_id);
+                formData.append('photo', image);
+                formData.append('caption', message);
+
+                fetch(url, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(handleResponse)
+                .catch(error => {
+                    alert('Error en la solicitud: ' + error);
+                });
+            } else {
+                // Enviar solo el mensaje si no se seleccionó una imagen
+                const url = `https://api.telegram.org/bot${token}/sendMessage`;
+                const params = {
+                    chat_id: chat_id,
+                    text: message
+                };
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(params)
+                })
+                .then(response => response.json())
+                .then(handleResponse)
+                .catch(error => {
+                    alert('Error en la solicitud: ' + error);
+                });
+            }
+        });
+    </script>
+
+
+    <script>
+
+const apiKey = 'c2a30192cfbf4e95acbb656bf3af6177';
+const endpoint = `https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}`;
+
+fetch(endpoint)
+  .then(response => response.json())
+  .then(data => {
+    const movies = data.results;
+    const randomIndex = Math.floor(Math.random() * movies.length);
+    const movie = movies[randomIndex];
+    const imageUrl = `https://image.tmdb.org/t/p/original${movie.backdrop_path}`;
+    
+    const container = document.querySelector('.imgfomdo');
+    container.style.backgroundImage = `linear-gradient(to top, rgb(17, 15, 18) 0%, rgb(17 15 18 / 46%) 100%), url(${imageUrl})`;
+  })
+  .catch(error => console.error('Error fetching data from TMDB:', error));
+
+
+
+
+    </script>
 
 <style>
   
   
-  
-  iframe#zvxcvxcv {
+  div#post-body-3511792817596476529 {
     position: fixed;
-    z-index: 9;
-    width: -webkit-fill-available;
-    height: 100%;
     top: 0;
     left: 0;
+    width: -webkit-fill-available;
+    height: -webkit-fill-available;
+    background: #110F12;
+    margin: 0;
+    overflow: scroll;
+}
+  
+  
+  .imgfomdo {
+    height: 50vh;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    padding: 15px;
     display: flex;
-    background: #000;
+    align-items: center;
+    justify-content: flex-end;
+    color: #fff;
+    font-family: "Kanit", sans-serif;
+    flex-direction: column;
+    text-align: center;
+    font-weight: 500;
+    
+    
+    }
+  
+  footer#footer {
+    display: none !important;
+}
+  
+  
+  .imgfomdo h2 {
+    font-size: 12px;
+    color: #999;
+    font-weight: 400;
+}
+  
+  
+  form#telegramForm {
+      padding: 15px;
+    }
+  
+  
+  div#messageCounter {
+      padding: 15px;
+    }
+  
+  
+  @import url('https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+  
+  
+  
+  label {
+    font-size: 17px;
+    margin-bottom: -14px;
+    display: flex;
+    color: #9f86cb;
+}
+  
+  textarea#message {
+    background: #110f12;
+    border-radius: 20px;
+    border: solid 1px #673AB7;
+    padding: 15px;
+    width: -webkit-fill-available;
+}
+  
+  .btnenviar {
+    width: -webkit-fill-available;
+    display: flex;
     align-items: center;
     justify-content: center;
 }
   
+  
+  .btnenviar button {
+    width: 189px;
+    margin: 10px;
+    height: 50px;
+    font-size: 20px;
+    color: #fff;
+    background: #673AB7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 100px;
+    box-shadow: rgba(0, 0, 0, 0.17) 0px -23px 25px 0px inset, rgba(0, 0, 0, 0.15) 0px -36px 30px 0px inset, rgba(0, 0, 0, 0.1) 0px -79px 40px 0px inset, rgba(0, 0, 0, 0.06) 0px 2px 1px, rgba(0, 0, 0, 0.09) 0px 4px 2px, rgba(0, 0, 0, 0.09) 0px 8px 4px, rgba(0, 0, 0, 0.09) 0px 16px 8px, rgba(0, 0, 0, 0.09) 0px 32px 16px;
+}
+  
+  
+  
 </style>
+
+
+
