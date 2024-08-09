@@ -19,23 +19,25 @@
         /* Estilos para el modal */
         #modal {
             display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.5);
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    align-items: center;
+    justify-content: center;
         }
         #modal-content {
             background-color: #343444;
-    margin: 15% auto;
     padding: 20px;
     width: 80%;
     max-width: 400px;
     text-align: center;
     border-radius: 18px;
+    height: max-content;
         }
         #close-btn {
             color: #aaa;
@@ -208,7 +210,7 @@ body {
 </div>`;
                                 output.value = contentDiv; // Copiar el HTML al textarea
 
-                                modal.style.display = 'block'; // Mostrar modal
+                                modal.style.display = 'flex'; // Mostrar modal
                                 document.body.classList.add('no-scroll'); // Deshabilitar scroll en el body
                             });
                             searchResults.appendChild(resultItem);
