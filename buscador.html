@@ -158,8 +158,8 @@ body {
     </div>
 
     <script>
-  
-  document.addEventListener('DOMContentLoaded', () => {
+      
+      document.addEventListener('DOMContentLoaded', () => {
     const apiKey = 'c2a30192cfbf4e95acbb656bf3af6177'; // Reemplaza con tu API key
     const searchInput = document.getElementById('search-input');
     const searchResults = document.getElementById('search-results');
@@ -193,15 +193,21 @@ body {
 
                             const typeIcon = result.media_type === 'movie' ? '🎬' : '📺'; // Emoji para diferenciar
 
+                            // Nombre original en paréntesis si está disponible
+                            const originalName = result.original_title || result.original_name;
+                            const nameWithOriginal = originalName && originalName !== (result.title || result.name) 
+                                ? `${result.title || result.name} (${originalName})`
+                                : result.title || result.name;
+
                             resultItem.innerHTML = `
                                 <img src="${imgSrc}" alt="${result.title || result.name}">
-                                <span>${typeIcon} ${result.title || result.name}</span>
+                                <span>${typeIcon} ${nameWithOriginal}</span>
                             `;
 
                             resultItem.addEventListener('click', () => {
                                 // Mostrar el modal con la información
                                 modalImg.src = imgSrc;
-                                modalTitle.textContent = result.title || result.name;
+                                modalTitle.textContent = nameWithOriginal;
 
                                 const contentUrl = `https://www.themoviedb.org/${result.media_type}/${result.id}`;
                                 const imgUrl = `https://image.tmdb.org/t/p/original${result.poster_path || result.backdrop_path}`;
@@ -248,9 +254,8 @@ body {
         }
     }
 });
-
-  
-  
-  </script>
+      
+      
+</script>
 </body>
 </html>
