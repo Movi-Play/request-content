@@ -118,9 +118,12 @@ p, h2, h3  {
   margin: 0;
 }
 
-h2, h3 {
+h2, h3, p {
   color: white;
-}
+  color: white;
+  margin-top: 10px;
+  margin-bottom: 10px;
+} 
 
 
 .code-block {
@@ -147,28 +150,47 @@ body {
     <div id="search-results"></div>
 
     <!-- Modal -->
-    <div id="modal">
+<div id="modal">
         <div id="modal-content">
             <span id="close-btn">&times;</span>
             <img id="modal-img" src="" alt="">
             <h3 id="modal-title"></h3>
+            <p style="color: #888;" id="modal-genres"></p>
             <textarea id="output" rows="10" cols="50" readonly></textarea> <!-- Mostrar textarea en el modal -->
             <button id="copy-btn">Copiar al Portapapeles</button>
         </div>
     </div>
 
+
     <script>
       
-      document.addEventListener('DOMContentLoaded', () => {
+     document.addEventListener('DOMContentLoaded', () => {
     const apiKey = 'c2a30192cfbf4e95acbb656bf3af6177'; // Reemplaza con tu API key
     const searchInput = document.getElementById('search-input');
     const searchResults = document.getElementById('search-results');
     const modal = document.getElementById('modal');
     const modalImg = document.getElementById('modal-img');
     const modalTitle = document.getElementById('modal-title');
+    const modalGenres = document.getElementById('modal-genres'); // Añadir este elemento al HTML
     const closeBtn = document.getElementById('close-btn');
     const copyBtn = document.getElementById('copy-btn');
     const output = document.getElementById('output');
+
+    // Obtener la lista de géneros de películas y series de televisión
+    let movieGenres = [];
+    let tvGenres = [];
+    
+    fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${apiKey}&language=es`)
+        .then(response => response.json())
+        .then(data => {
+            movieGenres = data.genres;
+        });
+
+    fetch(`https://api.themoviedb.org/3/genre/tv/list?api_key=${apiKey}&language=es`)
+        .then(response => response.json())
+        .then(data => {
+            tvGenres = data.genres;
+        });
 
     searchInput.addEventListener('keyup', () => {
         const query = searchInput.value;
@@ -208,6 +230,17 @@ body {
                                 // Mostrar el modal con la información
                                 modalImg.src = imgSrc;
                                 modalTitle.textContent = nameWithOriginal;
+
+                                // Obtener y mostrar géneros
+                                let genres = [];
+                                if (result.media_type === 'movie') {
+                                    genres = movieGenres.filter(genre => result.genre_ids.includes(genre.id));
+                                } else if (result.media_type === 'tv') {
+                                    genres = tvGenres.filter(genre => result.genre_ids.includes(genre.id));
+                                }
+
+                                const genreNames = genres.map(genre => genre.name).join(', ');
+                                modalGenres.textContent = genreNames || 'Sin información de géneros'; // Mostrar géneros en el modal
 
                                 const contentUrl = `https://www.themoviedb.org/${result.media_type}/${result.id}`;
                                 const imgUrl = `https://image.tmdb.org/t/p/original${result.poster_path || result.backdrop_path}`;
@@ -254,6 +287,8 @@ body {
         }
     }
 });
+
+
       
       
 </script>
