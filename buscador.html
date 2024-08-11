@@ -1,296 +1,491 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <link rel="icon" type="image/png" sizes="32x32" href="https://www.themoviedb.org/assets/2/favicon-32x32-543a21832c8931d3494a68881f6afcafc58e96c5d324345377f3197a37b367b5.png">
-<link rel="icon" type="image/png" sizes="16x16" href="https://www.themoviedb.org/assets/2/favicon-16x16-b362d267873ce9c5a39f686a11fe67fec2a72ed25fa8396c11b71aa43c938b11.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <!-- Swiper CSS -->
+<link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+<!-- Swiper JS -->
+<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+
     <title>TMDb Search</title>
     <style>
-        .result-item {
+        @import url('https://fonts.googleapis.com/css2?family=Onest:wght@600&display=swap');
+
+        :root {
+            --black: #191819;
+            --white: #d9d9d9;
+        }
+
+        body {
+            background: var(--black);
+            font-family: 'Onest', sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: var(--white);
+        }
+
+        .search-container {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto 20px;
+        }
+
+        #search-input {
+            width: -webkit-fill-available;
+            padding: 15px 20px;
+            font-size: 18px;
+            border: none;
+            border-radius: 30px;
+            background-color: #2a292a;
+            color: var(--white);
+        }
+
+        .search-button {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #01b4e4;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
             display: flex;
             align-items: center;
+            justify-content: center;
+        }
+
+        #search-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 20px;
+        }
+
+        .result-item {
+            background: #2a292a;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
             cursor: pointer;
-            margin: 5px 0;
         }
+
         .result-item img {
-            width: 50px; /* Tamaño de la imagen */
+            width: 100%;
             height: auto;
-            margin-right: 10px;
+            display: block;
         }
-        /* Estilos para el modal */
+
+        .result-info {
+            padding: 10px;
+        }
+
+        .result-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .result-date {
+            font-size: 12px;
+            color: #ccc;
+        }
+
+        .result-score {
+            margin-bottom: 10px;
+            bottom: 10px;
+            left: 10px;
+            width: 38px;
+            height: 38px;
+            background: #081c22;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .score-circle {
+            width: 34px;
+            height: 34px;
+        }
+
+        .score-text {
+            position: absolute;
+            font-weight: bold;
+            font-size: 13px;
+            color: white;
+        }
+
+        /* Estilos para el modal (sin cambios) */
         #modal {
             display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.5);
-    align-items: center;
-    justify-content: center;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
         }
+
         #modal-content {
             background-color: #343444;
-    padding: 20px;
-    width: 80%;
-    max-width: 400px;
-    text-align: center;
-    border-radius: 18px;
-    height: max-content;
+            padding: 20px;
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+            border-radius: 18px;
+          overflow: scroll;
+    max-height: 80vh;
         }
-        #close-btn {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
-        #close-btn:hover,
-        #close-btn:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        #copy-btn {
-            margin-top: 14px;
-    border-radius: 10px;
-    border: 0;
-    background: #694e99;
-    color: #fff;
-    padding: 12px 19px;
-        }
-      
-      
-      #copy-btn:active {
-    opacity: 0.5;
-}
 
-      input#search-input {
-    width: -webkit-fill-available;
-    border: 0;
-    height: 37px;
-}
-      
         #modal-img {
-                width: auto;
-    height: auto;
-    max-height: 200px;
-    border-radius: 12px;
+            width: auto;
+            height: auto;
+            max-height: 200px;
+            border-radius: 12px;
+            margin-bottom: 15px;
         }
+
         #output {
-            width: -webkit-fill-available;
-    height: 100px;
-    margin-top: 10px;
+            width: 100%;
+    height: 0px;
+    margin-top: 0px;
     resize: none;
     background: #5a5a6c;
-    border: solid 2px #9C27B0;
+    border: solid 0px #9C27AF;
     border-radius: 20px;
-    padding: 10px;
+    padding: 0px;
     color: aliceblue;
-    overflow: hidden;
         }
-        /* Clase para evitar el scroll del body */
-        .no-scroll {
-            overflow: hidden;
+
+        #copy-btn {
+            margin-top: 14px;
+            border-radius: 10px;
+            border: 0;
+            background: #694e99;
+            color: #fff;
+            padding: 12px 19px;
+            cursor: pointer;
         }
-      
-      span {
-    color: #fff;
+
+        #copy-btn:active {
+            opacity: 0.5;
+        }
+      p#modal-genres {
+    font-size: 12px;
 }
       
-@import url('https://fonts.googleapis.com/css2?family=Onest:wght@600&display=swap');
-
-:root {
-  --green: #b8d953; 
-  --lilac: #b2b2eb;
-  --pink: #bb86e9;
-  --dark-green: #529a91;
-  --peach: #fe96b7;
-  --black: #191819;
-  --grey: #2a292a;
-  --white: #d9d9d9;
-
-}
-
-p, h2, h3  {
-  margin: 0;
-}
-
-h2, h3, p {
-  color: white;
-  color: white;
-  margin-top: 10px;
-  margin-bottom: 10px;
-} 
-
-
-.code-block {
-  font-family: 'Courier New', Courier, monospace; 
-  color: white;
-  background-color: black; 
-  padding: 5px; 
-  border-radius: 5px; 
-  border: 1px solid #ccc; 
-  
-}
-
-body {
-  background: var(--black);
-  font-family: 'Onest', sans-serif;
+      ::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
 }
 
 
       
+.swiper-container {
+    width: -webkit-fill-available;
+    height: auto!important;
+    overflow: auto;
+ margin-top: 33px;
+    margin-bottom: 10px;
+    border-radius: 12px;
+}
+
+
+.swiper-slide {
+    background-size: cover;
+    background-position: center;
+}
+      
+      
+      
+      
+      .swiper-slide {
+    height: 200px !important;
+}
+      
+      
+      div#swiper-wrapper {
+    height: auto !important;
+}
+
     </style>
 </head>
 <body>
-    <input type="text" id="search-input" placeholder="Buscar en TMDb">
+    <div class="search-container">
+        <input type="text" id="search-input" placeholder="Buscar una película, serie, persona...">
+        <button class="search-button">🔍</button>
+    </div>
     <div id="search-results"></div>
 
-    <!-- Modal -->
-<div id="modal">
+    <div id="modal">
         <div id="modal-content">
-            <span id="close-btn">&times;</span>
             <img id="modal-img" src="" alt="">
             <h3 id="modal-title"></h3>
-            <p style="color: #888;" id="modal-genres"></p>
-            <textarea id="output" rows="10" cols="50" readonly></textarea> <!-- Mostrar textarea en el modal -->
-            <button id="copy-btn">Copiar al Portapapeles</button>
+            <p id="modal-genres"></p>
+            <textarea id="output" rows="10" cols="50" readonly></textarea>
+            <button id="copy-btn">Copiar code</button>
+          
+          <div class="swiper-container">
+    <div class="swiper-wrapper" id="swiper-wrapper">
+        <!-- Las imágenes se agregarán dinámicamente aquí -->
+    </div>
+    
+</div>
+
         </div>
     </div>
 
+   <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const apiKey = 'c2a30192cfbf4e95acbb656bf3af6177';
+            const searchInput = document.getElementById('search-input');
+            const searchResults = document.getElementById('search-results');
+            const modal = document.getElementById('modal');
+            const modalImg = document.getElementById('modal-img');
+            const modalTitle = document.getElementById('modal-title');
+            const modalGenres = document.getElementById('modal-genres');
+            const copyBtn = document.getElementById('copy-btn');
+            const output = document.getElementById('output');
 
-    <script>
-      
-     document.addEventListener('DOMContentLoaded', () => {
-    const apiKey = 'c2a30192cfbf4e95acbb656bf3af6177'; // Reemplaza con tu API key
-    const searchInput = document.getElementById('search-input');
-    const searchResults = document.getElementById('search-results');
-    const modal = document.getElementById('modal');
-    const modalImg = document.getElementById('modal-img');
-    const modalTitle = document.getElementById('modal-title');
-    const modalGenres = document.getElementById('modal-genres'); // Añadir este elemento al HTML
-    const closeBtn = document.getElementById('close-btn');
-    const copyBtn = document.getElementById('copy-btn');
-    const output = document.getElementById('output');
+            let movieGenres = [];
+            let tvGenres = [];
 
-    // Obtener la lista de géneros de películas y series de televisión
-    let movieGenres = [];
-    let tvGenres = [];
-    
-    fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${apiKey}&language=es`)
-        .then(response => response.json())
-        .then(data => {
-            movieGenres = data.genres;
-        });
-
-    fetch(`https://api.themoviedb.org/3/genre/tv/list?api_key=${apiKey}&language=es`)
-        .then(response => response.json())
-        .then(data => {
-            tvGenres = data.genres;
-        });
-
-    searchInput.addEventListener('keyup', () => {
-        const query = searchInput.value;
-        if (query.length > 2) {
-            fetch(`https://api.themoviedb.org/3/search/multi?api_key=${apiKey}&query=${query}&language=es`)
+            fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${apiKey}&language=es`)
                 .then(response => response.json())
                 .then(data => {
-                    searchResults.innerHTML = '';
-                    data.results.forEach(result => {
-                        // Filtrar solo películas y series
-                        if (result.media_type === 'movie' || result.media_type === 'tv') {
-                            const resultItem = document.createElement('div');
-                            resultItem.className = 'result-item';
-                            
-                            // Obtener la imagen en español o en inglés
-                            let imgSrc;
-                            if (result.poster_path) {
-                                imgSrc = `https://image.tmdb.org/t/p/w500${result.poster_path}`;
-                            } else {
-                                imgSrc = `https://image.tmdb.org/t/p/w500${result.backdrop_path}`;
-                            }
-
-                            const typeIcon = result.media_type === 'movie' ? '🎬' : '📺'; // Emoji para diferenciar
-
-                            // Nombre original en paréntesis si está disponible
-                            const originalName = result.original_title || result.original_name;
-                            const nameWithOriginal = originalName && originalName !== (result.title || result.name) 
-                                ? `${result.title || result.name} (${originalName})`
-                                : result.title || result.name;
-
-                            resultItem.innerHTML = `
-                                <img src="${imgSrc}" alt="${result.title || result.name}">
-                                <span>${typeIcon} ${nameWithOriginal}</span>
-                            `;
-
-                            resultItem.addEventListener('click', () => {
-                                // Mostrar el modal con la información
-                                modalImg.src = imgSrc;
-                                modalTitle.textContent = nameWithOriginal;
-
-                                // Obtener y mostrar géneros
-                                let genres = [];
-                                if (result.media_type === 'movie') {
-                                    genres = movieGenres.filter(genre => result.genre_ids.includes(genre.id));
-                                } else if (result.media_type === 'tv') {
-                                    genres = tvGenres.filter(genre => result.genre_ids.includes(genre.id));
-                                }
-
-                                const genreNames = genres.map(genre => genre.name).join(', ');
-                                modalGenres.textContent = genreNames || 'Sin información de géneros'; // Mostrar géneros en el modal
-
-                                const contentUrl = `https://www.themoviedb.org/${result.media_type}/${result.id}`;
-                                const imgUrl = `https://image.tmdb.org/t/p/original${result.poster_path || result.backdrop_path}`;
-                                const contentDiv = `
-<div class="mobile_header content" style="display:none;">
-  <a href="${contentUrl}"></a>
-  <img class="display:none;" src="${imgUrl}">
-</div>`;
-                                output.value = contentDiv; // Copiar el HTML al textarea
-
-                                modal.style.display = 'flex'; // Mostrar modal
-                                document.body.classList.add('no-scroll'); // Deshabilitar scroll en el body
-                            });
-                            searchResults.appendChild(resultItem);
-                        }
-                    });
+                    movieGenres = data.genres;
                 });
-        }
-    });
 
-    // Cerrar el modal
-    closeBtn.addEventListener('click', () => {
-        modal.style.display = 'none';
-        document.body.classList.remove('no-scroll'); // Habilitar scroll en el body
-    });
+            fetch(`https://api.themoviedb.org/3/genre/tv/list?api_key=${apiKey}&language=es`)
+                .then(response => response.json())
+                .then(data => {
+                    tvGenres = data.genres;
+                });
 
-    // Copiar al portapapeles
-    copyBtn.addEventListener('click', () => {
-        // Crear un elemento de textarea temporal
-        const tempTextArea = document.createElement('textarea');
-        tempTextArea.value = output.value;
-        document.body.appendChild(tempTextArea);
-        tempTextArea.select();
-        document.execCommand('copy'); // Copiar al portapapeles
-        document.body.removeChild(tempTextArea); // Remover el textarea temporal
-        alert('Código copiado al portapapeles');
-    });
+            function getScoreColor(score) {
+                if (score >= 70) return '#21d07a';
+                if (score >= 40) return '#d2d531';
+                return '#db2360';
+            }
 
-    // Cerrar el modal si se hace clic fuera de él
-    window.onclick = function(event) {
-        if (event.target == modal) {
-            modal.style.display = 'none';
-            document.body.classList.remove('no-scroll'); // Habilitar scroll en el body
-        }
-    }
+            function createScoreCircle(score) {
+    const color = getScoreColor(score);
+    const radius = 15.9155; // Radio del círculo
+    const circumference = 2 * Math.PI * radius;
+    const offset = circumference * (1 - score / 100);
+
+    return `
+        <svg class="score-circle" viewBox="0 0 36 36">
+            <path d="M18 2.0845
+                a 15.9155 15.9155 0 0 1 0 31.831
+                a 15.9155 15.9155 0 0 1 0 -31.831"
+                fill="none"
+                stroke="#204529"
+                stroke-width="3"
+            />
+            <path d="M18 2.0845
+                a 15.9155 15.9155 0 0 1 0 31.831
+                a 15.9155 15.9155 0 0 1 0 -31.831"
+                fill="none"
+                stroke="${color}"
+                stroke-width="3"
+                stroke-dasharray="${circumference}"
+                stroke-dashoffset="${offset}"
+            />
+        </svg>
+        <span class="score-text">${score}%</span>
+    `;
+}
+
+
+            searchInput.addEventListener('keyup', () => {
+                const query = searchInput.value;
+                if (query.length > 2) {
+                    fetch(`https://api.themoviedb.org/3/search/multi?api_key=${apiKey}&query=${query}&language=es`)
+                        .then(response => response.json())
+                        .then(data => {
+                            searchResults.innerHTML = '';
+                            data.results.forEach(result => {
+                                if (result.media_type === 'movie' || result.media_type === 'tv') {
+                                    const resultItem = document.createElement('div');
+                                    resultItem.className = 'result-item';
+                                    
+                                    let imgSrc = result.poster_path 
+                                        ? `https://image.tmdb.org/t/p/w500${result.poster_path}`
+                                        : 'https://via.placeholder.com/500x750';
+
+                                    const releaseDate = result.release_date || result.first_air_date;
+                                    const year = releaseDate ? new Date(releaseDate).getFullYear() : '';
+                                    const score = Math.round(result.vote_average * 10);
+
+                                   resultItem.innerHTML = `
+    <img src="${imgSrc}" alt="${result.title || result.name}">
+    <div class="result-info">
+      <div class="result-score">
+        ${createScoreCircle(score)}
+    </div>
+        <div class="result-title">
+    ${result.title || result.name}
+    ${result.original_title || result.original_name ? (result.title || result.name) !== (result.original_title || result.original_name) ? ` (${result.original_title || result.original_name})` : '' : ''}
+</div>
+<div class="result-date">${year}</div>
+
+
+    
+`;
+
+
+
+resultItem.addEventListener('click', () => {
+    // Obtener detalles adicionales de la película/serie seleccionada
+    fetch(`https://api.themoviedb.org/3/${result.media_type}/${result.id}/images?api_key=${apiKey}`)
+        .then(response => response.json())
+        .then(imagesData => {
+            // Configurar la imagen del modal
+            modalImg.src = `https://image.tmdb.org/t/p/w500${result.poster_path || result.backdrop_path}`;
+
+            // Configurar el título del modal
+            const originalName = result.original_title || result.original_name;
+            const translatedName = result.title || result.name;
+            modalTitle.textContent = `${translatedName}${originalName && originalName !== translatedName ? ` (${originalName})` : ''}`;
+
+            // Obtener y mostrar géneros
+            let genres = [];
+            if (result.media_type === 'movie') {
+                genres = movieGenres.filter(genre => result.genre_ids.includes(genre.id));
+            } else if (result.media_type === 'tv') {
+                genres = tvGenres.filter(genre => result.genre_ids.includes(genre.id));
+            }
+            const genreNames = genres.map(genre => genre.name).join(', ');
+            modalGenres.textContent = genreNames || 'Sin información de géneros';
+
+            // Configurar el contenido del textarea
+            const contentUrl = `https://www.themoviedb.org/${result.media_type}/${result.id}`;
+            const imgUrl = `https://image.tmdb.org/t/p/original${result.poster_path || result.backdrop_path}`;
+            const contentDiv = `
+                <div class="mobile_header content" style="display:none;">
+                    <a href="${contentUrl}"></a>
+                    <img class="display:none;" src="${imgUrl}">
+                </div>`;
+            output.value = contentDiv;
+
+            // Agregar imágenes al swiper
+            const swiperWrapper = document.getElementById('swiper-wrapper');
+            swiperWrapper.innerHTML = ''; // Limpiar el swiper
+
+            const images = [];
+
+            // Filtrar y añadir solo backdrops sin información de idioma
+            if (imagesData.backdrops && imagesData.backdrops.length > 0) {
+                imagesData.backdrops.forEach(backdrop => {
+                    if (backdrop.file_path) {
+                        // Filtrar imágenes sin metadata de idioma
+                        if (!backdrop.language || backdrop.language === 'xx' || backdrop.language === '') {
+                            images.push(`https://image.tmdb.org/t/p/original${backdrop.file_path}`);
+                        }
+                    }
+                });
+            }
+
+            // Crear una diapositiva para cada imagen
+            images.forEach(image => {
+                const slide = document.createElement('div');
+                slide.className = 'swiper-slide';
+                slide.style.backgroundImage = `url(${image})`;
+                slide.style.backgroundSize = 'cover'; // Para cubrir el área de la diapositiva
+                slide.style.backgroundPosition = 'center'; // Centrar la imagen
+
+                slide.addEventListener('click', () => {
+                    // Copiar URL de la imagen de tamaño original al portapapeles
+                    const tempTextArea = document.createElement('textarea');
+                    tempTextArea.value = image;
+                    document.body.appendChild(tempTextArea);
+                    tempTextArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tempTextArea);
+                    alert('URL de la imagen copiada al portapapeles');
+                });
+
+                swiperWrapper.appendChild(slide);
+            });
+
+            // Inicializar el swiper después de añadir todas las imágenes
+            const swiper = new Swiper('.swiper-container', {
+    pagination: {
+        el: '.swiper-pagination',
+        clickable: true,
+    },
+    navigation: {
+        nextEl: '.swiper-button-next',
+        prevEl: '.swiper-button-prev',
+    },
+    loop: false, // Sin bucle infinito
+    slidesPerView: 1, // Mostrar una diapositiva por vista
+    spaceBetween: 10, // Espacio entre las diapositivas
+    autoHeight: true, // Ajustar automáticamente la altura del swiper según el contenido
 });
 
 
-      
-      
-</script>
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                    searchResults.appendChild(resultItem);
+                                }
+                            });
+                        });
+                }
+            });
+
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                }
+            });
+
+            copyBtn.addEventListener('click', () => {
+                const tempTextArea = document.createElement('textarea');
+                tempTextArea.value = output.value;
+                document.body.appendChild(tempTextArea);
+                tempTextArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempTextArea);
+                alert('Código copiado al portapapeles');
+            });
+        });
+    </script>
+
+
+
 </body>
 </html>
