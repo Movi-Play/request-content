@@ -245,246 +245,238 @@
     </div>
 
    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const apiKey = 'c2a30192cfbf4e95acbb656bf3af6177';
-            const searchInput = document.getElementById('search-input');
-            const searchResults = document.getElementById('search-results');
-            const modal = document.getElementById('modal');
-            const modalImg = document.getElementById('modal-img');
-            const modalTitle = document.getElementById('modal-title');
-            const modalGenres = document.getElementById('modal-genres');
-            const copyBtn = document.getElementById('copy-btn');
-            const output = document.getElementById('output');
+       document.addEventListener('DOMContentLoaded', () => {
+    const apiKey = 'c2a30192cfbf4e95acbb656bf3af6177';
+    const searchInput = document.getElementById('search-input');
+    const searchResults = document.getElementById('search-results');
+    const modal = document.getElementById('modal');
+    const modalImg = document.getElementById('modal-img');
+    const modalTitle = document.getElementById('modal-title');
+    const modalGenres = document.getElementById('modal-genres');
+    const copyBtn = document.getElementById('copy-btn');
+    const output = document.getElementById('output');
 
-            let movieGenres = [];
-            let tvGenres = [];
+    let movieGenres = [];
+    let tvGenres = [];
 
-            fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${apiKey}&language=es`)
-                .then(response => response.json())
-                .then(data => {
-                    movieGenres = data.genres;
-                });
-
-            fetch(`https://api.themoviedb.org/3/genre/tv/list?api_key=${apiKey}&language=es`)
-                .then(response => response.json())
-                .then(data => {
-                    tvGenres = data.genres;
-                });
-
-            function getScoreColor(score) {
-                if (score >= 70) return '#21d07a';
-                if (score >= 40) return '#d2d531';
-                return '#db2360';
-            }
-
-            function createScoreCircle(score) {
-    const color = getScoreColor(score);
-    const radius = 15.9155; // Radio del círculo
-    const circumference = 2 * Math.PI * radius;
-    const offset = circumference * (1 - score / 100);
-
-    return `
-        <svg class="score-circle" viewBox="0 0 36 36">
-            <path d="M18 2.0845
-                a 15.9155 15.9155 0 0 1 0 31.831
-                a 15.9155 15.9155 0 0 1 0 -31.831"
-                fill="none"
-                stroke="#204529"
-                stroke-width="3"
-            />
-            <path d="M18 2.0845
-                a 15.9155 15.9155 0 0 1 0 31.831
-                a 15.9155 15.9155 0 0 1 0 -31.831"
-                fill="none"
-                stroke="${color}"
-                stroke-width="3"
-                stroke-dasharray="${circumference}"
-                stroke-dashoffset="${offset}"
-            />
-        </svg>
-        <span class="score-text">${score}%</span>
-    `;
-}
-
-
-            searchInput.addEventListener('keyup', () => {
-                const query = searchInput.value;
-                if (query.length > 2) {
-                    fetch(`https://api.themoviedb.org/3/search/multi?api_key=${apiKey}&query=${query}&language=es`)
-                        .then(response => response.json())
-                        .then(data => {
-                            searchResults.innerHTML = '';
-                            data.results.forEach(result => {
-                                if (result.media_type === 'movie' || result.media_type === 'tv') {
-                                    const resultItem = document.createElement('div');
-                                    resultItem.className = 'result-item';
-                                    
-                                    let imgSrc = result.poster_path 
-                                        ? `https://image.tmdb.org/t/p/w500${result.poster_path}`
-                                        : 'https://via.placeholder.com/500x750';
-
-                                    const releaseDate = result.release_date || result.first_air_date;
-                                    const year = releaseDate ? new Date(releaseDate).getFullYear() : '';
-                                    const score = Math.round(result.vote_average * 10);
-
-                                   resultItem.innerHTML = `
-    <img src="${imgSrc}" alt="${result.title || result.name}">
-    <div class="result-info">
-      <div class="result-score">
-        ${createScoreCircle(score)}
-    </div>
-        <div class="result-title">
-    ${result.title || result.name}
-    ${result.original_title || result.original_name ? (result.title || result.name) !== (result.original_title || result.original_name) ? ` (${result.original_title || result.original_name})` : '' : ''}
-</div>
-<div class="result-date">${year}</div>
-
-
-    
-`;
-
-
-
-resultItem.addEventListener('click', () => {
-    // Obtener detalles adicionales de la película/serie seleccionada
-    fetch(`https://api.themoviedb.org/3/${result.media_type}/${result.id}/images?api_key=${apiKey}`)
+    fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${apiKey}&language=es`)
         .then(response => response.json())
-        .then(imagesData => {
-            // Configurar la imagen del modal
-            modalImg.src = `https://image.tmdb.org/t/p/w500${result.poster_path || result.backdrop_path}`;
-
-            // Configurar el título del modal
-            const originalName = result.original_title || result.original_name;
-            const translatedName = result.title || result.name;
-            modalTitle.textContent = `${translatedName}${originalName && originalName !== translatedName ? ` (${originalName})` : ''}`;
-
-            // Obtener y mostrar géneros
-            let genres = [];
-            if (result.media_type === 'movie') {
-                genres = movieGenres.filter(genre => result.genre_ids.includes(genre.id));
-            } else if (result.media_type === 'tv') {
-                genres = tvGenres.filter(genre => result.genre_ids.includes(genre.id));
-            }
-            const genreNames = genres.map(genre => genre.name).join(', ');
-            modalGenres.textContent = genreNames || 'Sin información de géneros';
-
-            // Configurar el contenido del textarea
-            const contentUrl = `https://www.themoviedb.org/${result.media_type}/${result.id}`;
-            const imgUrl = `https://image.tmdb.org/t/p/original${result.poster_path || result.backdrop_path}`;
-            const contentDiv = `
-                <div class="mobile_header content" style="display:none;">
-                    <a href="${contentUrl}"></a>
-                    <img class="display:none;" src="${imgUrl}">
-                </div>`;
-            output.value = contentDiv;
-
-            // Agregar imágenes al swiper
-            const swiperWrapper = document.getElementById('swiper-wrapper');
-            swiperWrapper.innerHTML = ''; // Limpiar el swiper
-
-            const images = [];
-
-            // Filtrar y añadir solo backdrops sin información de idioma
-            if (imagesData.backdrops && imagesData.backdrops.length > 0) {
-                imagesData.backdrops.forEach(backdrop => {
-                    if (backdrop.file_path) {
-                        // Filtrar imágenes sin metadata de idioma
-                        if (!backdrop.language || backdrop.language === 'xx' || backdrop.language === '') {
-                            images.push(`https://image.tmdb.org/t/p/original${backdrop.file_path}`);
-                        }
-                    }
-                });
-            }
-
-            // Crear una diapositiva para cada imagen
-            images.forEach(image => {
-                const slide = document.createElement('div');
-                slide.className = 'swiper-slide';
-                slide.style.backgroundImage = `url(${image})`;
-                slide.style.backgroundSize = 'cover'; // Para cubrir el área de la diapositiva
-                slide.style.backgroundPosition = 'center'; // Centrar la imagen
-
-                slide.addEventListener('click', () => {
-                    // Copiar URL de la imagen de tamaño original al portapapeles
-                    const tempTextArea = document.createElement('textarea');
-                    tempTextArea.value = image;
-                    document.body.appendChild(tempTextArea);
-                    tempTextArea.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(tempTextArea);
-                    alert('URL de la imagen copiada al portapapeles');
-                });
-
-                swiperWrapper.appendChild(slide);
-            });
-
-            // Inicializar el swiper después de añadir todas las imágenes
-            const swiper = new Swiper('.swiper-container', {
-    pagination: {
-        el: '.swiper-pagination',
-        clickable: true,
-    },
-    navigation: {
-        nextEl: '.swiper-button-next',
-        prevEl: '.swiper-button-prev',
-    },
-    loop: false, // Sin bucle infinito
-    slidesPerView: 1, // Mostrar una diapositiva por vista
-    spaceBetween: 10, // Espacio entre las diapositivas
-    autoHeight: true, // Ajustar automáticamente la altura del swiper según el contenido
-});
-
-
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
+        .then(data => {
+            movieGenres = data.genres;
         });
-});
 
+    fetch(`https://api.themoviedb.org/3/genre/tv/list?api_key=${apiKey}&language=es`)
+        .then(response => response.json())
+        .then(data => {
+            tvGenres = data.genres;
+        });
 
+    function getScoreColor(score) {
+        if (score >= 70) return '#21d07a';
+        if (score >= 40) return '#d2d531';
+        return '#db2360';
+    }
 
+    function createScoreCircle(score) {
+        const color = getScoreColor(score);
+        const radius = 15.9155;
+        const circumference = 2 * Math.PI * radius;
+        const offset = circumference * (1 - score / 100);
 
+        return `
+            <svg class="score-circle" viewBox="0 0 36 36">
+                <path d="M18 2.0845
+                    a 15.9155 15.9155 0 0 1 0 31.831
+                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none"
+                    stroke="#204529"
+                    stroke-width="3"
+                />
+                <path d="M18 2.0845
+                    a 15.9155 15.9155 0 0 1 0 31.831
+                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none"
+                    stroke="${color}"
+                    stroke-width="3"
+                    stroke-dasharray="${circumference}"
+                    stroke-dashoffset="${offset}"
+                />
+            </svg>
+            <span class="score-text">${score}%</span>
+        `;
+    }
 
+    function formatFecha(dateStr) {
+        const date = new Date(dateStr);
+        const options = { weekday: 'long', day: 'numeric', month: 'numeric', year: 'numeric' };
+        return date.toLocaleDateString('es-ES', options).replace(',', '');
+    }
 
+    searchInput.addEventListener('keyup', () => {
+        const query = searchInput.value;
+        if (query.length > 2) {
+            fetch(`https://api.themoviedb.org/3/search/multi?api_key=${apiKey}&query=${query}&language=es`)
+                .then(response => response.json())
+                .then(data => {
+                    searchResults.innerHTML = '';
+                    data.results.forEach(result => {
+                        if (result.media_type === 'movie' || result.media_type === 'tv') {
+                            const resultItem = document.createElement('div');
+                            resultItem.className = 'result-item';
 
+                            let imgSrc = result.poster_path 
+                                ? `https://image.tmdb.org/t/p/w500${result.poster_path}`
+                                : 'https://via.placeholder.com/500x750';
 
+                            const releaseDate = result.release_date || result.first_air_date;
+                            const year = releaseDate ? new Date(releaseDate).getFullYear() : '';
+                            const score = Math.round(result.vote_average * 10);
 
+                            resultItem.innerHTML = `
+                                <img src="${imgSrc}" alt="${result.title || result.name}">
+                                <div class="result-info">
+                                    <div class="result-score">
+                                        ${createScoreCircle(score)}
+                                    </div>
+                                    <div class="result-title">
+                                        ${result.title || result.name}
+                                        ${year ? ` (${year})` : ''}
+                                        ${result.original_title || result.original_name ? (result.title || result.name) !== (result.original_title || result.original_name) ? ` (${result.original_title || result.original_name})` : '' : ''}
+                                    </div>
+                                    <div class="result-date">${year}</div>
+                                </div>
+                            `;
 
+                            resultItem.addEventListener('click', () => {
+                                fetch(`https://api.themoviedb.org/3/${result.media_type}/${result.id}/images?api_key=${apiKey}`)
+                                    .then(response => response.json())
+                                    .then(imagesData => {
+                                        modalImg.src = `https://image.tmdb.org/t/p/w500${result.poster_path || result.backdrop_path}`;
 
+                                        const originalName = result.original_title || result.original_name;
+                                        const translatedName = result.title || result.name;
+                                        modalTitle.textContent = `${translatedName}${originalName && originalName !== translatedName ? ` (${originalName})` : ''}${year ? ` (${year})` : ''}`;
 
+                                        let genres = [];
+                                        if (result.media_type === 'movie') {
+                                            genres = movieGenres.filter(genre => result.genre_ids.includes(genre.id));
+                                        } else if (result.media_type === 'tv') {
+                                            genres = tvGenres.filter(genre => result.genre_ids.includes(genre.id));
+                                        }
+                                        const genreNames = genres.map(genre => genre.name).join(', ');
+                                        modalGenres.textContent = genreNames || 'Sin información de géneros';
 
+                                        if (result.media_type === 'tv') {
+                                            fetch(`https://api.themoviedb.org/3/tv/${result.id}?api_key=${apiKey}&language=es`)
+                                                .then(response => response.json())
+                                                .then(tvData => {
+                                                    const temporadas = tvData.number_of_seasons;
+                                                    const episodios = tvData.number_of_episodes;
+                                                    const temporadaEpisodioInfo = `Temporadas: ${temporadas}, Episodios: ${episodios}`;
+                                                    modalGenres.textContent += `\n${temporadaEpisodioInfo}`;
 
+                                                    const nextEpisode = tvData.next_episode_to_air;
+                                                    if (nextEpisode) {
+                                                        const fechaProximoEpisodio = formatFecha(nextEpisode.air_date);
+                                                        modalGenres.textContent += `\nPróximo episodio: ${fechaProximoEpisodio}`;
+                                                    } else {
+                                                        modalGenres.textContent += `\n${tvData.status === 'Ended' ? 'La serie ha finalizado' : 'Habrá una próxima temporada'}`;
+                                                    }
+                                                });
+                                        }
 
+                                        const contentUrl = `https://www.themoviedb.org/${result.media_type}/${result.id}`;
+                                        const imgUrl = `https://image.tmdb.org/t/p/original${result.poster_path || result.backdrop_path}`;
+                                        const contentDiv = `
+                                            <div class="mobile_header content" style="display:none;">
+                                                <a href="${contentUrl}"></a>
+                                                <img class="display:none;" src="${imgUrl}">
+                                            </div>`;
+                                        output.value = contentDiv;
 
+                                        const swiperWrapper = document.getElementById('swiper-wrapper');
+                                        swiperWrapper.innerHTML = '';
 
+                                        const images = [];
 
+                                        if (imagesData.backdrops && imagesData.backdrops.length > 0) {
+                                            imagesData.backdrops.forEach(backdrop => {
+                                                if (backdrop.file_path) {
+                                                    if (!backdrop.language || backdrop.language === 'xx' || backdrop.language === '') {
+                                                        images.push({
+                                                            w500: `https://image.tmdb.org/t/p/w500${backdrop.file_path}`,
+                                                            original: `https://image.tmdb.org/t/p/original${backdrop.file_path}`
+                                                        });
+                                                    }
+                                                }
+                                            });
+                                        }
 
+                                        images.forEach(image => {
+                                            const slide = document.createElement('div');
+                                            slide.className = 'swiper-slide';
+                                            slide.style.backgroundImage = `url(${image.w500})`;
+                                            slide.style.backgroundSize = 'cover';
+                                            slide.style.backgroundPosition = 'center';
 
+                                            slide.addEventListener('click', () => {
+                                                const tempTextArea = document.createElement('textarea');
+                                                tempTextArea.value = image.original;
+                                                document.body.appendChild(tempTextArea);
+                                                tempTextArea.select();
+                                                document.execCommand('copy');
+                                                document.body.removeChild(tempTextArea);
+                                                alert('URL de la imagen copiada al portapapeles');
+                                            });
 
+                                            swiperWrapper.appendChild(slide);
+                                        });
 
-                                    searchResults.appendChild(resultItem);
-                                }
+                                        const swiper = new Swiper('.swiper-container', {
+                                            pagination: {
+                                                el: '.swiper-pagination',
+                                                clickable: true,
+                                            },
+                                            navigation: {
+                                                nextEl: '.swiper-button-next',
+                                                prevEl: '.swiper-button-prev',
+                                            },
+                                            loop: false,
+                                            slidesPerView: 1,
+                                            spaceBetween: 10,
+                                            autoHeight: true,
+                                        });
+
+                                        modal.style.display = 'flex';
+                                        document.body.style.overflow = 'hidden';
+                                    });
                             });
-                        });
-                }
-            });
 
-            modal.addEventListener('click', (event) => {
-                if (event.target === modal) {
-                    modal.style.display = 'none';
-                    document.body.style.overflow = 'auto';
-                }
-            });
+                            searchResults.appendChild(resultItem);
+                        }
+                    });
+                });
+        }
+    });
 
-            copyBtn.addEventListener('click', () => {
-                const tempTextArea = document.createElement('textarea');
-                tempTextArea.value = output.value;
-                document.body.appendChild(tempTextArea);
-                tempTextArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(tempTextArea);
-                alert('Código copiado al portapapeles');
-            });
-        });
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    });
+
+    copyBtn.addEventListener('click', () => {
+        const tempTextArea = document.createElement('textarea');
+        tempTextArea.value = output.value;
+        document.body.appendChild(tempTextArea);
+        tempTextArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempTextArea);
+        alert('Código copiado al portapapeles');
+    });
+});
+
     </script>
 
 
