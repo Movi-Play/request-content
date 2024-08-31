@@ -217,6 +217,44 @@
     height: auto !important;
 }
 
+
+
+
+         #toast {
+                visibility: hidden;
+    min-width: 250px;
+    margin-left: -125px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 25px;
+    padding: 8px;
+    position: fixed;
+    z-index: 1;
+    left: 50%;
+    bottom: 30px;
+    font-size: 14px;
+   z-index: 99;
+    width: auto;
+        }
+
+        #toast.show {
+            visibility: visible;
+            animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        }
+
+        @keyframes fadein {
+            from {bottom: 0; opacity: 0;}
+            to {bottom: 30px; opacity: 1;}
+        }
+
+        @keyframes fadeout {
+            from {bottom: 30px; opacity: 1;}
+            to {bottom: 0; opacity: 0;}
+        }
+      
+      
+
     </style>
 </head>
 <body>
@@ -225,7 +263,7 @@
         <button class="search-button">🔍</button>
     </div>
     <div id="search-results"></div>
-
+    <div id="toast">Próximamente en Movi Play</div>
     <div id="modal">
         <div id="modal-content">
             <img id="modal-img" src="" alt="">
@@ -473,10 +511,27 @@
         tempTextArea.select();
         document.execCommand('copy');
         document.body.removeChild(tempTextArea);
-        alert('Código copiado al portapapeles');
+        showProximamenteAlert();
     });
 });
 
+
+
+       let toastVisible = false;
+    
+    
+// Function to show an alert when clicking on "Próximamente" entries
+function showProximamenteAlert() {
+    if (!toastVisible) { // Only show if not already visible
+                toastVisible = true;
+                toast.className = "show";
+                setTimeout(function(){ 
+                    toast.className = toast.className.replace("show", ""); 
+                    toastVisible = false; // Reset visibility flag
+                }, 3000);
+            }
+
+}
     </script>
 
 
