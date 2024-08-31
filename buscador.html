@@ -230,11 +230,10 @@
     border-radius: 25px;
     padding: 8px;
     position: fixed;
-    z-index: 1;
+    z-index: 99999999;
     left: 50%;
     bottom: 30px;
     font-size: 14px;
-   z-index: 99;
     width: auto;
         }
 
@@ -263,7 +262,7 @@
         <button class="search-button">🔍</button>
     </div>
     <div id="search-results"></div>
-    <div id="toast">Próximamente en Movi Play</div>
+    <div id="toast">Copiado</div>
     <div id="modal">
         <div id="modal-content">
             <img id="modal-img" src="" alt="">
@@ -464,7 +463,7 @@
                                                 tempTextArea.select();
                                                 document.execCommand('copy');
                                                 document.body.removeChild(tempTextArea);
-                                                alert('URL de la imagen copiada al portapapeles');
+                                                showProximamenteAlert();
                                             });
 
                                             swiperWrapper.appendChild(slide);
