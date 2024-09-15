@@ -282,7 +282,10 @@
     </div>
 
    <script>
-       document.addEventListener('DOMContentLoaded', () => {
+  
+  
+  
+  document.addEventListener('DOMContentLoaded', () => {
     const apiKey = 'c2a30192cfbf4e95acbb656bf3af6177';
     const searchInput = document.getElementById('search-input');
     const searchResults = document.getElementById('search-results');
@@ -292,6 +295,7 @@
     const modalGenres = document.getElementById('modal-genres');
     const copyBtn = document.getElementById('copy-btn');
     const output = document.getElementById('output');
+    const toast = document.getElementById('toast'); // Ensure you have a toast element
 
     let movieGenres = [];
     let tvGenres = [];
@@ -352,7 +356,7 @@
     searchInput.addEventListener('keyup', () => {
         const query = searchInput.value;
         if (query.length > 2) {
-            fetch(`https://api.themoviedb.org/3/search/multi?api_key=${apiKey}&query=${query}&language=es`)
+            fetch(`https://api.themoviedb.org/3/search/multi?api_key=${apiKey}&query=${query}&language=es&include_adult=true`)
                 .then(response => response.json())
                 .then(data => {
                     searchResults.innerHTML = '';
@@ -512,26 +516,24 @@
         document.body.removeChild(tempTextArea);
         showProximamenteAlert();
     });
+
+    let toastVisible = false;
+    
+    function showProximamenteAlert() {
+        if (!toastVisible) { // Only show if not already visible
+            toastVisible = true;
+            toast.className = "show";
+            setTimeout(function(){ 
+                toast.className = toast.className.replace("show", ""); 
+                toastVisible = false; // Reset visibility flag
+            }, 3000);
+        }
+    }
 });
 
-
-
-       let toastVisible = false;
-    
-    
-// Function to show an alert when clicking on "Próximamente" entries
-function showProximamenteAlert() {
-    if (!toastVisible) { // Only show if not already visible
-                toastVisible = true;
-                toast.className = "show";
-                setTimeout(function(){ 
-                    toast.className = toast.className.replace("show", ""); 
-                    toastVisible = false; // Reset visibility flag
-                }, 3000);
-            }
-
-}
-    </script>
+  
+  
+  </script>
 
 
 
