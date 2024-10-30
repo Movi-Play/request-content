@@ -411,16 +411,18 @@ document.addEventListener('DOMContentLoaded', () => {
                                         seenTitles.add(mxTitle);
                                     }
 
-                                    // Agregar título ES si es diferente
-                                    if (esTitle && !seenTitles.has(esTitle)) {
-                                        titles.push(`(${esTitle})`);
-                                        seenTitles.add(esTitle);
-                                    }
-
+                                    
                                     // Agregar título EN si es diferente
                                     if (enTitle && !seenTitles.has(enTitle)) {
                                         titles.push(`(${enTitle})`);
                                         seenTitles.add(enTitle);
+                                    }
+
+
+                                    // Agregar título ES si es diferente
+                                    if (esTitle && !seenTitles.has(esTitle)) {
+                                        titles.push(`(${esTitle})`);
+                                        seenTitles.add(esTitle);
                                     }
 
                                     // Agregar título original si es diferente de todos los demás
