@@ -284,8 +284,7 @@
    <script>
   
   
-  
-  document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
     const apiKey = 'c2a30192cfbf4e95acbb656bf3af6177';
     const searchInput = document.getElementById('search-input');
     const searchResults = document.getElementById('search-results');
@@ -295,7 +294,7 @@
     const modalGenres = document.getElementById('modal-genres');
     const copyBtn = document.getElementById('copy-btn');
     const output = document.getElementById('output');
-    const toast = document.getElementById('toast'); // Ensure you have a toast element
+    const toast = document.getElementById('toast');
 
     let movieGenres = [];
     let tvGenres = [];
@@ -382,115 +381,145 @@
                                     <div class="result-title">
                                         ${result.title || result.name}
                                         ${year ? ` (${year})` : ''}
-                                        ${result.original_title || result.original_name ? (result.title || result.name) !== (result.original_title || result.original_name) ? ` (${result.original_title || result.original_name})` : '' : ''}
                                     </div>
                                     <div class="result-date">${year}</div>
                                 </div>
                             `;
 
                             resultItem.addEventListener('click', () => {
-                                fetch(`https://api.themoviedb.org/3/${result.media_type}/${result.id}/images?api_key=${apiKey}`)
-                                    .then(response => response.json())
-                                    .then(imagesData => {
-                                        modalImg.src = `https://image.tmdb.org/t/p/w500${result.poster_path || result.backdrop_path}`;
+                                Promise.all([
+                                    fetch(`https://api.themoviedb.org/3/${result.media_type}/${result.id}?api_key=${apiKey}&language=es-MX`).then(r => r.json()),
+                                    fetch(`https://api.themoviedb.org/3/${result.media_type}/${result.id}?api_key=${apiKey}&language=es-ES`).then(r => r.json()),
+                                    fetch(`https://api.themoviedb.org/3/${result.media_type}/${result.id}?api_key=${apiKey}&language=en-US`).then(r => r.json()),
+                                    fetch(`https://api.themoviedb.org/3/${result.media_type}/${result.id}/images?api_key=${apiKey}`).then(r => r.json())
+                                ]).then(([dataMX, dataES, dataEN, imagesData]) => {
+                                    modalImg.src = `https://image.tmdb.org/t/p/w500${result.poster_path || result.backdrop_path}`;
 
-                                        const originalName = result.original_title || result.original_name;
-                                        const translatedName = result.title || result.name;
-                                        modalTitle.textContent = `${translatedName}${originalName && originalName !== translatedName ? ` (${originalName})` : ''}${year ? ` (${year})` : ''}`;
+                                    // Nueva lógica para gestionar títulos únicos
+                                    const titleMap = new Map();
+                                    const seenTitles = new Set();
+                                    const titles = [];
 
-                                        let genres = [];
-                                        if (result.media_type === 'movie') {
-                                            genres = movieGenres.filter(genre => result.genre_ids.includes(genre.id));
-                                        } else if (result.media_type === 'tv') {
-                                            genres = tvGenres.filter(genre => result.genre_ids.includes(genre.id));
+                                    const mxTitle = dataMX.title || dataMX.name;
+                                    const esTitle = dataES.title || dataES.name;
+                                    const enTitle = dataEN.title || dataEN.name;
+                                    const originalTitle = dataEN.original_title || dataEN.original_name;
+
+                                    // Agregar título MX primero (sin paréntesis)
+                                    if (mxTitle && !seenTitles.has(mxTitle)) {
+                                        titles.push(mxTitle);
+                                        seenTitles.add(mxTitle);
+                                    }
+
+                                    // Agregar título ES si es diferente
+                                    if (esTitle && !seenTitles.has(esTitle)) {
+                                        titles.push(`(es-ES: ${esTitle})`);
+                                        seenTitles.add(esTitle);
+                                    }
+
+                                    // Agregar título EN si es diferente
+                                    if (enTitle && !seenTitles.has(enTitle)) {
+                                        titles.push(`(en-US: ${enTitle})`);
+                                        seenTitles.add(enTitle);
+                                    }
+
+                                    // Agregar título original si es diferente de todos los demás
+                                    if (originalTitle && !seenTitles.has(originalTitle)) {
+                                        titles.push(`(Original: ${originalTitle})`);
+                                    }
+
+                                    const year = releaseDate ? ` (${new Date(releaseDate).getFullYear()})` : '';
+                                    modalTitle.textContent = titles.join(' ') + year;
+
+                                    let genres = [];
+                                    if (result.media_type === 'movie') {
+                                        genres = movieGenres.filter(genre => result.genre_ids.includes(genre.id));
+                                    } else if (result.media_type === 'tv') {
+                                        genres = tvGenres.filter(genre => result.genre_ids.includes(genre.id));
+                                    }
+                                    const genreNames = genres.map(genre => genre.name).join(', ');
+                                    modalGenres.textContent = genreNames || 'Sin información de géneros';
+
+                                    if (result.media_type === 'tv') {
+                                        const temporadas = dataMX.number_of_seasons;
+                                        const episodios = dataMX.number_of_episodes;
+                                        const temporadaEpisodioInfo = `Temporadas: ${temporadas}, Episodios: ${episodios}`;
+                                        modalGenres.textContent += `\n${temporadaEpisodioInfo}`;
+
+                                        const nextEpisode = dataMX.next_episode_to_air;
+                                        if (nextEpisode) {
+                                            const fechaProximoEpisodio = formatFecha(nextEpisode.air_date);
+                                            modalGenres.textContent += `\nPróximo episodio: ${fechaProximoEpisodio}`;
+                                        } else {
+                                            modalGenres.textContent += `\n${dataMX.status === 'Ended' ? 'La serie ha finalizado' : 'Habrá una próxima temporada'}`;
                                         }
-                                        const genreNames = genres.map(genre => genre.name).join(', ');
-                                        modalGenres.textContent = genreNames || 'Sin información de géneros';
+                                    }
 
-                                        if (result.media_type === 'tv') {
-                                            fetch(`https://api.themoviedb.org/3/tv/${result.id}?api_key=${apiKey}&language=es`)
-                                                .then(response => response.json())
-                                                .then(tvData => {
-                                                    const temporadas = tvData.number_of_seasons;
-                                                    const episodios = tvData.number_of_episodes;
-                                                    const temporadaEpisodioInfo = `Temporadas: ${temporadas}, Episodios: ${episodios}`;
-                                                    modalGenres.textContent += `\n${temporadaEpisodioInfo}`;
+                                    const contentUrl = `https://www.themoviedb.org/${result.media_type}/${result.id}`;
+                                    const imgUrl = `https://image.tmdb.org/t/p/original${result.poster_path || result.backdrop_path}`;
+                                    const contentDiv = `
+                                        <div class="mobile_header content" style="display:none;">
+                                            <a href="${contentUrl}"></a>
+                                            <img class="display:none;" src="${imgUrl}">
+                                        </div>`;
+                                    output.value = contentDiv;
 
-                                                    const nextEpisode = tvData.next_episode_to_air;
-                                                    if (nextEpisode) {
-                                                        const fechaProximoEpisodio = formatFecha(nextEpisode.air_date);
-                                                        modalGenres.textContent += `\nPróximo episodio: ${fechaProximoEpisodio}`;
-                                                    } else {
-                                                        modalGenres.textContent += `\n${tvData.status === 'Ended' ? 'La serie ha finalizado' : 'Habrá una próxima temporada'}`;
-                                                    }
-                                                });
-                                        }
+                                    const swiperWrapper = document.getElementById('swiper-wrapper');
+                                    swiperWrapper.innerHTML = '';
 
-                                        const contentUrl = `https://www.themoviedb.org/${result.media_type}/${result.id}`;
-                                        const imgUrl = `https://image.tmdb.org/t/p/original${result.poster_path || result.backdrop_path}`;
-                                        const contentDiv = `
-                                            <div class="mobile_header content" style="display:none;">
-                                                <a href="${contentUrl}"></a>
-                                                <img class="display:none;" src="${imgUrl}">
-                                            </div>`;
-                                        output.value = contentDiv;
+                                    const images = [];
 
-                                        const swiperWrapper = document.getElementById('swiper-wrapper');
-                                        swiperWrapper.innerHTML = '';
-
-                                        const images = [];
-
-                                        if (imagesData.backdrops && imagesData.backdrops.length > 0) {
-                                            imagesData.backdrops.forEach(backdrop => {
-                                                if (backdrop.file_path) {
-                                                    if (!backdrop.language || backdrop.language === 'xx' || backdrop.language === '') {
-                                                        images.push({
-                                                            w500: `https://image.tmdb.org/t/p/w500${backdrop.file_path}`,
-                                                            original: `https://image.tmdb.org/t/p/original${backdrop.file_path}`
-                                                        });
-                                                    }
+                                    if (imagesData.backdrops && imagesData.backdrops.length > 0) {
+                                        imagesData.backdrops.forEach(backdrop => {
+                                            if (backdrop.file_path) {
+                                                if (!backdrop.language || backdrop.language === 'xx' || backdrop.language === '') {
+                                                    images.push({
+                                                        w500: `https://image.tmdb.org/t/p/w500${backdrop.file_path}`,
+                                                        original: `https://image.tmdb.org/t/p/original${backdrop.file_path}`
+                                                    });
                                                 }
-                                            });
-                                        }
+                                            }
+                                        });
+                                    }
 
-                                        images.forEach(image => {
-                                            const slide = document.createElement('div');
-                                            slide.className = 'swiper-slide';
-                                            slide.style.backgroundImage = `url(${image.w500})`;
-                                            slide.style.backgroundSize = 'cover';
-                                            slide.style.backgroundPosition = 'center';
+                                    images.forEach(image => {
+                                        const slide = document.createElement('div');
+                                        slide.className = 'swiper-slide';
+                                        slide.style.backgroundImage = `url(${image.w500})`;
+                                        slide.style.backgroundSize = 'cover';
+                                        slide.style.backgroundPosition = 'center';
 
-                                            slide.addEventListener('click', () => {
-                                                const tempTextArea = document.createElement('textarea');
-                                                tempTextArea.value = image.original;
-                                                document.body.appendChild(tempTextArea);
-                                                tempTextArea.select();
-                                                document.execCommand('copy');
-                                                document.body.removeChild(tempTextArea);
-                                                showProximamenteAlert();
-                                            });
-
-                                            swiperWrapper.appendChild(slide);
+                                        slide.addEventListener('click', () => {
+                                            const tempTextArea = document.createElement('textarea');
+                                            tempTextArea.value = image.original;
+                                            document.body.appendChild(tempTextArea);
+                                            tempTextArea.select();
+                                            document.execCommand('copy');
+                                            document.body.removeChild(tempTextArea);
+                                            showProximamenteAlert();
                                         });
 
-                                        const swiper = new Swiper('.swiper-container', {
-                                            pagination: {
-                                                el: '.swiper-pagination',
-                                                clickable: true,
-                                            },
-                                            navigation: {
-                                                nextEl: '.swiper-button-next',
-                                                prevEl: '.swiper-button-prev',
-                                            },
-                                            loop: false,
-                                            slidesPerView: 1,
-                                            spaceBetween: 10,
-                                            autoHeight: true,
-                                        });
-
-                                        modal.style.display = 'flex';
-                                        document.body.style.overflow = 'hidden';
+                                        swiperWrapper.appendChild(slide);
                                     });
+
+                                    const swiper = new Swiper('.swiper-container', {
+                                        pagination: {
+                                            el: '.swiper-pagination',
+                                            clickable: true,
+                                        },
+                                        navigation: {
+                                            nextEl: '.swiper-button-next',
+                                            prevEl: '.swiper-button-prev',
+                                        },
+                                        loop: false,
+                                        slidesPerView: 1,
+                                        spaceBetween: 10,
+                                        autoHeight: true,
+                                    });
+
+                                    modal.style.display = 'flex';
+                                    document.body.style.overflow = 'hidden';
+                                });
                             });
 
                             searchResults.appendChild(resultItem);
@@ -520,12 +549,12 @@
     let toastVisible = false;
     
     function showProximamenteAlert() {
-        if (!toastVisible) { // Only show if not already visible
+        if (!toastVisible) {
             toastVisible = true;
             toast.className = "show";
             setTimeout(function(){ 
                 toast.className = toast.className.replace("show", ""); 
-                toastVisible = false; // Reset visibility flag
+                toastVisible = false;
             }, 3000);
         }
     }
