@@ -413,19 +413,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
                                     // Agregar título ES si es diferente
                                     if (esTitle && !seenTitles.has(esTitle)) {
-                                        titles.push(`(es-ES: ${esTitle})`);
+                                        titles.push(`(${esTitle})`);
                                         seenTitles.add(esTitle);
                                     }
 
                                     // Agregar título EN si es diferente
                                     if (enTitle && !seenTitles.has(enTitle)) {
-                                        titles.push(`(en-US: ${enTitle})`);
+                                        titles.push(`(${enTitle})`);
                                         seenTitles.add(enTitle);
                                     }
 
                                     // Agregar título original si es diferente de todos los demás
                                     if (originalTitle && !seenTitles.has(originalTitle)) {
-                                        titles.push(`(Original: ${originalTitle})`);
+                                        titles.push(`(${originalTitle})`);
                                     }
 
                                     const year = releaseDate ? ` (${new Date(releaseDate).getFullYear()})` : '';
