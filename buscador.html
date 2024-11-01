@@ -352,6 +352,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return date.toLocaleDateString('es-ES', options).replace(',', '');
     }
 
+    function normalizeTitle(title) {
+        return title.toLowerCase().trim().replace(/\s+/g, ' ');
+    }
+
     searchInput.addEventListener('keyup', () => {
         const query = searchInput.value;
         if (query.length > 2) {
@@ -395,42 +399,35 @@ document.addEventListener('DOMContentLoaded', () => {
                                 ]).then(([dataMX, dataES, dataEN, imagesData]) => {
                                     modalImg.src = `https://image.tmdb.org/t/p/w500${result.poster_path || result.backdrop_path}`;
 
-                                    // Nueva lógica para gestionar títulos únicos
-                                    const titleMap = new Map();
-                                    const seenTitles = new Set();
                                     const titles = [];
-
-                                    const mxTitle = dataMX.title || dataMX.name;
-                                    const enTitle = dataEN.title || dataEN.name;
-                                    const esTitle = dataES.title || dataES.name;
-                                    const originalTitle = dataEN.original_title || dataEN.original_name;
-
-                                    // Agregar título MX primero (sin paréntesis)
-                                    if (mxTitle && !seenTitles.has(mxTitle)) {
-                                        titles.push(mxTitle);
-                                        seenTitles.add(mxTitle);
-                                    }
-
+                                    const seenTitles = new Set();
                                     
-                                    // Agregar título EN si es diferente
-                                    if (enTitle && !seenTitles.has(enTitle)) {
-                                        titles.push(`(${enTitle})`);
-                                        seenTitles.add(enTitle);
+                                    function addTitle(title, prefix = '') {
+                                        if (!title) return;
+                                        const normalizedTitle = normalizeTitle(title);
+                                        if (!seenTitles.has(normalizedTitle)) {
+                                            seenTitles.add(normalizedTitle);
+                                            titles.push(prefix ? `(${prefix}: ${title})` : title);
+                                        }
                                     }
 
-
-                                    // Agregar título ES si es diferente
-                                    if (esTitle && !seenTitles.has(esTitle)) {
-                                        titles.push(`(${esTitle})`);
-                                        seenTitles.add(esTitle);
-                                    }
-
-                                    // Agregar título original si es diferente de todos los demás
-                                    if (originalTitle && !seenTitles.has(originalTitle)) {
-                                        titles.push(`(${originalTitle})`);
-                                    }
+                                    // Add es-MX title without parentheses
+                                    addTitle(dataMX.title || dataMX.name);
+                                    
+                                    // Add es-ES title
+                                    const esTitle = dataES.title || dataES.name;
+                                    if (esTitle) addTitle(esTitle, 'es-ES');
+                                    
+                                    // Add EN title
+                                    const enTitle = dataEN.title || dataEN.name;
+                                    if (enTitle) addTitle(enTitle, 'en-US');
+                                    
+                                    // Add original title
+                                    const originalTitle = dataEN.original_title || dataEN.original_name;
+                                    if (originalTitle) addTitle(originalTitle, 'Original');
 
                                     const year = releaseDate ? ` (${new Date(releaseDate).getFullYear()})` : '';
+                                    
                                     modalTitle.textContent = titles.join(' ') + year;
 
                                     let genres = [];
