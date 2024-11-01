@@ -407,7 +407,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                         const normalizedTitle = normalizeTitle(title);
                                         if (!seenTitles.has(normalizedTitle)) {
                                             seenTitles.add(normalizedTitle);
-                                            titles.push(prefix ? `${title})` : title);
+                                            titles.push(prefix ? `(${title})` : title);
                                         }
                                     }
 
